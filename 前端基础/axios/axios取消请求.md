@@ -27,8 +27,8 @@ cancel();
 1. 配置axios请求时候，axios配置参数提供一个cancelToken属性，该属性值是CancelToken实例的对象，执行new CancelToken的时候传入一个执行器，执行器参数暴露接口。
 2. CancelToken()内部在this上添加promise对象。 待执行取消请求可以改变promise状态。
 3. promise状态更改成resolved会执行then方法。
-4. xhr 打开请求后，调用config.cancelToken.subscribe(onCanceled)，config.cancelToken就是new CancelToken的实例，此时将取消请求添加进this实例的_listeners数组上。
-5  cancel()请求将resolved promise的状态，执行then，then内部执行onCanceled即可取消请求。
+4. xhr 打开请求后，调用config.cancelToken.subscribe(onCanceled)，config.cancelToken就是new CancelToken的this实例，此时将取消请求添加进自身this实例的_listeners数组上。
+5  cancel()请求将resolved this.promise的状态，执行then，then内部执行onCanceled即可取消传入的request请求。
 
 ```
 
