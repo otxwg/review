@@ -1,51 +1,63 @@
 ### axios 代码结构
 
-lib
-│ axios.js
-│ defaults.js
-│ README.md
-│ utils.js
-│
-├─adapters
-│ http.js
-│ README.md
-│ xhr.js
-│
-├─cancel
-│ Cancel.js
-│ CancelToken.js
-│ isCancel.js
-│
-├─core
-│ Axios.js
-│ buildFullPath.js
-│ createError.js
-│ dispatchRequest.js
-│ enhanceError.js
-│ InterceptorManager.js
-│ mergeConfig.js
-│ README.md
-│ settle.js
-│ transformData.js
-│
-├─env
-│ data.js
-│ README.md
-│
-└─helpers
-bind.js
-buildURL.js
-combineURLs.js
-cookies.js
-deprecatedMethod.js
-isAbsoluteURL.js
-isAxiosError.js
-isURLSameOrigin.js
-normalizeHeaderName.js
-parseHeaders.js
-README.md
-spread.js
-validator.js
+axios
+├── CHANGELOG.md
+├── dist
+│ ├── axios.js
+│ ├── axios.map
+│ ├── axios.min.js
+│ └── axios.min.map
+├── index.d.ts
+├── index.js
+├── lib
+│ ├── adapters
+│ │ ├── http.js
+│ │ ├── README.md
+│ │ └── xhr.js
+│ ├── axios.js
+│ ├── cancel
+│ │ ├── Cancel.js
+│ │ ├── CancelToken.js
+│ │ └── isCancel.js
+│ ├── core
+│ │ ├── Axios.js
+│ │ ├── buildFullPath.js
+│ │ ├── createError.js
+│ │ ├── dispatchRequest.js
+│ │ ├── enhanceError.js
+│ │ ├── InterceptorManager.js
+│ │ ├── mergeConfig.js
+│ │ ├── README.md
+│ │ ├── settle.js
+│ │ └── transformData.js
+│ ├── defaults.js
+│ ├── env
+│ │ ├── data.js
+│ │ └── README.md
+│ ├── helpers
+│ │ ├── bind.js
+│ │ ├── buildURL.js
+│ │ ├── combineURLs.js
+│ │ ├── cookies.js
+│ │ ├── deprecatedMethod.js
+│ │ ├── isAbsoluteURL.js
+│ │ ├── isAxiosError.js
+│ │ ├── isURLSameOrigin.js
+│ │ ├── normalizeHeaderName.js
+│ │ ├── parseHeaders.js
+│ │ ├── README.md
+│ │ ├── spread.js
+│ │ └── validator.js
+│ ├── README.md
+│ └── utils.js
+├── LICENSE
+├── package.json
+├── README.md
+├── SECURITY.md
+├── tree.md
+├── tsconfig.json
+├── tslint.json
+└── UPGRADE_GUIDE.md
 
 ###
 
