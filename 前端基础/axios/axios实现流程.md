@@ -1,5 +1,6 @@
 ### axios 代码结构
 
+```js
 axios
 ├── CHANGELOG.md
 ├── dist
@@ -58,6 +59,7 @@ axios
 ├── tsconfig.json
 ├── tslint.json
 └── UPGRADE_GUIDE.md
+```
 
 ###
 
@@ -89,17 +91,24 @@ module.exports.default = axios;
 
 1. new Axios 主要在在实例上挂载了拦截器对象，用来存储请求拦截和响应拦截。interceptors 对象具有 request，response
    的 InterceptorManager 实例。
-   function Axios(instanceConfig) {
-   this.defaults = instanceConfig;
-   this.interceptors = {
-   request: new InterceptorManager(),
-   response: new InterceptorManager()
-   };
-   }
-   InterceptorManager 定义：
-   function InterceptorManager() {
-   this.handlers = [];
-   }
+
+```js
+function Axios(instanceConfig) {
+this.defaults = instanceConfig;
+this.interceptors = {
+request: new InterceptorManager(),
+response: new InterceptorManager()
+};
+```
+
+InterceptorManager 定义：
+
+```js
+function InterceptorManager() {
+  this.handlers = [];
+}
+```
+
 2. 其实我们用的 axios 就是 axios 原型上的 Axios.prototype.request 方法。方法用来处理配置数据和发起请求，最后处理结果
    和返回请求结果。
 
