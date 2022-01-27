@@ -246,4 +246,42 @@ Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
 };
 ```
 
-7. 未完待续...
+7. view 输入数据--》v-model 语法糖对数据重新赋值，触发 set 方法，`dep.notify()`派发更新订阅的 watcher，
+
+```js
+// Dep
+ notify() {
+   const subs = this.subs.slice();
+   for (let i = 0, l = subs.length; i < l; i++) {
+     subs[i].update();
+   }
+ }
+ // Watcher
+   update() {
+   if (this.lazy) {
+     this.dirty = true;
+   } else if (this.sync) {
+     this.run();
+   } else {
+     queueWatcher(this);
+   }
+ }
+ // 放入队列
+ export function queueWatcher (watcher: Watcher) {
+  // ...
+  nextTick(flushSchedulerQueue)
+}
+// 执行flushSchedulerQueue
+// 模板重新获取渲染
+flushSchedulerQueue(){
+ watcher.run()
+}
+run(){
+  const value = this.get();
+}
+get(){
+// 再次调用this.get 取值和更新组件
+ value = this.getter.call(vm, vm); // 调用更新函数，执行ast包装的render函数返回虚拟dom和进行依赖收集
+}
+
+```
