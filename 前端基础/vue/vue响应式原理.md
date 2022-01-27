@@ -147,8 +147,10 @@ Vue.prototype.$mount = function () {
     }
     ```
 
-    Watcher 实例 this,调用内部 get 方法，内部 get 方法将全局变量 `Dep.target 设置为 Watcher 实例的 this`,接着调用 `vm._render()`生成 vdom
-    在解析 ast 的 render(vm)---》vdom 过程中，会读取 vm 的数据属性，触发 `observer/index.js`的 Object.defineProperty 对应的 get 方法，get 方法内部做了依赖收集:
+    Watcher 实例 this,调用内部 get 方法，内部 get 方法将全局变量`Dep.target设置为Watcher实例的this`,
+    接着调用`vm._render()`生成 vdom
+    在解析通过 ast 的包装的 render(vm)---》vdom 过程中，会读取 vm 的数据属性，触发`observer/index.js`的
+    Object.defineProperty 对应的 get 方法，get 方法内部做了依赖收集:
 
     init 的响应式定义
 
@@ -198,7 +200,7 @@ Vue.prototype.$mount = function () {
     }
     ```
 
-    Watcher 类内部方法 addDep
+    再调用 Watcher 类内部方法 addDep
 
     ```js
       addDep(dep: Dep) {
@@ -213,7 +215,7 @@ Vue.prototype.$mount = function () {
       }
     ```
 
-6.  收集完数据后，虚拟 dom 也生成了，此时在`lifecycle.js`调用`vm._update(vnode, hydrating);`生成真正 dom
+6.  收集完数据后，再通过编译后，虚拟 dom 也生成了，此时在`lifecycle.js`调用`vm._update(vnode, hydrating);`生成真正 dom
 
 ```js
 Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
