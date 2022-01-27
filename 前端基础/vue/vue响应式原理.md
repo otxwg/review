@@ -245,3 +245,5 @@ Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
   }
 };
 ```
+
+7. 未完待续...
