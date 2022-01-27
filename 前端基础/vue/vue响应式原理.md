@@ -1,4 +1,4 @@
-### vue 执行原理和双向响应式实现流程
+### vue 执行流程和双向响应式原理
 
 vue 核心
 
@@ -123,174 +123,123 @@ Vue.prototype.$mount = function () {
     );
     ```
 5.  `Watcher类`：
-    将当前 Watcher 实例 this `vm._watcher`
+    将当前 Watcher 实例 this 赋值给`vm._watcher`
+    将 this.vm 赋值 vm `this.vm=vm`
     初始化依赖存放参数,
 
-        ```js
-        //放置watcher依赖的dep和dep依赖的watcher
-        this.deps = [];
-        this.newDeps = [];
-        this.depIds = new Set();
-        this.newDepIds = new Set();
-        ```
-
-        ```js
-        get() {
-          pushTarget(this); // 设置Dep.target=watcher
-          let value;
-          const vm = this.vm;
-          value = this.getter.call(vm, vm); // 调用更新函数，执行ast包装的render函数返回虚拟dom和进行依赖收集
-          popTarget();
-          this.cleanupDeps();
-          return value;
-        }
-        ```
-
-        Watcher 实例 this,调用内部 get 方法，内部 get 方法将全局变量 Dep.target 设置为 Watcher 实例的 this,接着调用 vm.\_render()生成 vdom
-        在解析 ast 的 render(vm) ---》vdom 过程中，会读取 vm 的数据属性，触发 `observer/index.js`的 Object.defineProperty 对应的 get 方法，get 方法内部做了依赖收集:
-
-    响应式定义
     ```js
+    //放置watcher依赖的dep和dep依赖的watcher
+    this.deps = [];
+    this.newDeps = [];
+    this.depIds = new Set();
+    this.newDepIds = new Set();
+    ```
 
-        Object.defineProperty(obj, key, {
-          enumerable: true,
-          configurable: true,
-          get: function reactiveGetter() {
-            const value = getter ? getter.call(obj) : val;
-            if (Dep.target) {
-              dep.depend(); // dep 是什么？ dep是闭包，初始化响应式时创建，对应数据的属性
-              if (childOb) {
-                childOb.dep.depend();
-                if (Array.isArray(value)) {
-                  dependArray(value);
-                }
-              }
+    ```js
+    get() {
+      pushTarget(this); // 设置Dep.target=watcher
+      let value;
+      const vm = this.vm;
+      value = this.getter.call(vm, vm); // 调用更新函数，执行ast包装的render函数返回虚拟dom和进行依赖收集
+      popTarget();
+      this.cleanupDeps();
+      return value;
+    }
+    ```
+
+    Watcher 实例 this,调用内部 get 方法，内部 get 方法将全局变量 `Dep.target 设置为 Watcher 实例的 this`,接着调用 `vm._render()`生成 vdom
+    在解析 ast 的 render(vm)---》vdom 过程中，会读取 vm 的数据属性，触发 `observer/index.js`的 Object.defineProperty 对应的 get 方法，get 方法内部做了依赖收集:
+
+    init 的响应式定义
+
+    ```js
+    Object.defineProperty(obj, key, {
+      enumerable: true,
+      configurable: true,
+      get: function reactiveGetter() {
+        const value = getter ? getter.call(obj) : val;
+        if (Dep.target) {
+          // 这里进行双向依赖收集，重点是dep收集watcher，为了数据改变派发更新指定watcher
+          dep.depend(); // dep 是什么？ dep是闭包，初始化响应式时创建，对应数据的属性
+          if (childOb) {
+            childOb.dep.depend();
+            if (Array.isArray(value)) {
+              dependArray(value);
             }
-            return value;
-          },
-          set: function reactiveSetter(newVal) {
-            const value = getter ? getter.call(obj) : val;
-            if (getter && !setter) return;
-            if (setter) {
-              setter.call(obj, newVal);
-            } else {
-              val = newVal;
-            }
-            childOb = !shallow && observe(newVal);
-            dep.notify();
-          },
-        });
-        ```
-
-        dep.js depend 方法
-
-        ```js
-        depend() {
-        //Dep.target 就是当前wachter
-        // this 要观察的数据属性dep
-          if (Dep.target) {
-            Dep.target.addDep(this);
           }
         }
-        ```
+        return value;
+      },
+      set: function reactiveSetter(newVal) {
+        const value = getter ? getter.call(obj) : val;
+        if (getter && !setter) return;
+        if (setter) {
+          setter.call(obj, newVal);
+        } else {
+          val = newVal;
+        }
+        childOb = !shallow && observe(newVal);
+        dep.notify();
+      },
+    });
+    ```
 
-        (1)watcher 收集 dep
-        (2)dep 收集 watcher
+    读取 defineProperty 内部 get 时，--》执行`dep.js 的 depend 方法`
+    Dep 类内部方法 depend
 
-        ```js
-         addDep(dep: Dep) {
-           const id = dep.id;
-           if (!this.newDepIds.has(id)) {
-             this.newDepIds.add(id);
-             this.newDeps.push(dep);// watcher收集依赖的dep
-             if (!this.depIds.has(id)) {
-               dep.addSub(this); // 属性收集要派发更新的watcher
-             }
-           }
-         }
-        ```
+    ```js
+    depend() {
+    //Dep.target 就是当前wachter
+    // this 要观察的数据属性对应创建的dep dep跟数据属性一一对应
+      if (Dep.target) {
+        // 调用Watcher类内部方法addDep
+        Dep.target.addDep(this);
+      }
+    }
+    ```
+
+    Watcher 类内部方法 addDep
+
+    ```js
+      addDep(dep: Dep) {
+        const id = dep.id;
+        if (!this.newDepIds.has(id)) {
+          this.newDepIds.add(id);
+          this.newDeps.push(dep);// watcher收集依赖的dep
+          if (!this.depIds.has(id)) {
+            dep.addSub(this); // 属性收集要派发更新的watcher
+          }
+        }
+      }
+    ```
+
+6.  收集完数据后，虚拟 dom 也生成了，此时在`lifecycle.js`调用`vm._update(vnode, hydrating);`生成真正 dom
 
 ```js
-/**
- * Define a reactive property on an Object.
- */
-export function defineReactive(
-  obj: Object,
-  key: string,
-  val: any,
-  customSetter?: ?Function,
-  shallow?: boolean
-) {
-  const dep = new Dep();
-  console.log(dep, "dep");
-  const property = Object.getOwnPropertyDescriptor(obj, key);
-  if (property && property.configurable === false) {
-    return;
+Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
+  const vm: Component = this;
+  const prevEl = vm.$el;
+  const prevVnode = vm._vnode;
+  const restoreActiveInstance = setActiveInstance(vm);
+  vm._vnode = vnode;
+  // Vue.prototype.__patch__ is injected in entry points
+  // based on the rendering backend used.
+  if (!prevVnode) {
+    // initial render
+    vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */);
+  } else {
+    // updates
+    vm.$el = vm.__patch__(prevVnode, vnode);
   }
-
-   cater for pre-defined getter/setters
-  const getter = property && property.get;
-  const setter = property && property.set;
-  if ((!getter || setter) && arguments.length === 2) {
-    val = obj[key];
+  restoreActiveInstance();
+  if (prevEl) {
+    prevEl.__vue__ = null;
   }
-
-  let childOb = !shallow && observe(val);
-  Object.defineProperty(obj, key, {
-    enumerable: true,
-    configurable: true,
-    get: function reactiveGetter() {
-      const value = getter ? getter.call(obj) : val;
-      if (Dep.target) {
-        // 1. 定义响应式时候 初始化属性对应dep
-        // 2. 首次渲染，mount-》调用lifecycle.js中的mountComponent--》new Watcher--》，
-        // 将当前watcher赋值给vm._watcher
-        // 当前Watcher实例this，初始化依赖存放参数
-        //  this.deps = [];
-        //  this.newDeps = [];
-        //  this.depIds = new Set();
-        //  this.newDepIds = new Set();
-        //  3. Watcher实例this,调用内部get方法，内部get方法将全局变量Dep.target设置为Watcher实例的this，
-        //  接着调用vm._render()生成vdom，
-        //  4. 在解析ast ---》vdom过程中，会读取vm的数据属性，触发 Object.defineProperty对应的get方法，
-        //  get方法内部做了依赖下列收集操作--》
-        //  watcher 收集dep
-        //  dep收集watcher
-        dep.depend();  // dep 是什么？ dep是闭包，初始化响应式时创建，对应数据的属性
-         depend () {
-           if (Dep.target) {
-             Dep.target.addDep(this)
-           }
-         }
-        if (childOb) {
-          childOb.dep.depend();
-          if (Array.isArray(value)) {
-            dependArray(value);
-          }
-        }
-      }
-      return value;
-    },
-    set: function reactiveSetter(newVal) {
-      const value = getter ? getter.call(obj) : val;
-      /* eslint-disable no-self-compare */
-      if (newVal === value || (newVal !== newVal && value !== value)) {
-        return;
-      }
-      /* eslint-enable no-self-compare */
-      if (process.env.NODE_ENV !== "production" && customSetter) {
-        customSetter();
-      }
-       #7981: for accessor properties without setter
-      if (getter && !setter) return;
-      if (setter) {
-        setter.call(obj, newVal);
-      } else {
-        val = newVal;
-      }
-      childOb = !shallow && observe(newVal);
-      dep.notify();
-    },
-  });
-}
+  if (vm.$el) {
+    vm.$el.__vue__ = vm;
+  }
+  if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
+    vm.$parent.$el = vm.$el;
+  }
+};
 ```
